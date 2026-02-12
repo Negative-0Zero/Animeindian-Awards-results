@@ -41,7 +41,11 @@ export default function Login({
     async function signInGoogle() {
         await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: window.location.origin }
+            options: {
+                redirectTo: window.location.origin,
+      // 👇 THIS IS THE MAGIC LINE – explicitly request ONLY these scopes
+                scopes: 'openid profile'
+            }
         })
     }
 
