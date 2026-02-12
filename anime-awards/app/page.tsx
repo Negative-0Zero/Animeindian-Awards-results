@@ -161,7 +161,6 @@ export default function Home() {
       <section id="categories-section" className="max-w-7xl mx-auto px-4 py-12">
         <div className="bg-gradient-to-br from-slate-900/90 to-slate-950/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 flex items-center justify-center gap-3 text-center">
-            <Star className="text-yellow-400 fill-yellow-400" />
             The Categories – {SEASON.name}
           </h2>
 
