@@ -72,23 +72,22 @@ export default function Login({
   }
 
   async function signInGoogle() {
-    // ✅ Wait for Google script to load
+  // ✅ Wait for Google script to load
     if (!isGoogleScriptLoaded) {
       alert('Google Sign-In is still loading. Please try again.')
-      return
+        return
     }
 
-    // ✅ Ensure Google Client ID is configured
+  // ✅ Ensure Google Client ID is configured
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    if (!clientId) {
-      alert('Google Client ID is not configured. Please add NEXT_PUBLIC_GOOGLE_CLIENT_ID to your environment variables.')
-      return
-    }
-
+      if (!clientId) {
+        alert('Google Client ID is not configured. Please add NEXT_PUBLIC_GOOGLE_CLIENT_ID to your environment variables.')
+          return
+      }
     try {
       const client = window.google?.accounts.oauth2.initCodeClient({
         client_id: clientId,
-        scope: 'openid profile', // ✅ NO EMAIL SCOPE – MAXIMUM PRIVACY
+        scope: 'openid profile', // ✅ NO EMAIL – MAXIMUM PRIVACY
         ux_mode: 'popup',
         callback: async (response) => {
           if (response.code) {
@@ -96,20 +95,27 @@ export default function Login({
               provider: 'google',
               token: response.code,
             })
-            if (error) {
-              console.error('Login error:', error)
-              alert('Login failed. Please try again.')
-            }
+              if (error) {
+                console.error('Login error:', error)
+                  alert('Login failed. Please try again.')
+              }
           } else if (response.error) {
             console.error('Google OAuth error:', response.error)
-            alert('Google login was cancelled or failed.')
+              alert('Google login was cancelled or failed.')
           }
         },
       })
-      client.requestCode()
+
+    // ✅ CRITICAL FIX: Check that client is defined before calling requestCode()
+      if (client) {
+        client.requestCode()
+      } else {
+        console.error('Failed to initialize Google Sign-In client')
+          alert('Google Sign-In failed to initialize. Please check your Client ID.')
+      }
     } catch (error) {
       console.error('Failed to initialize Google Sign-In:', error)
-      alert('Google Sign-In failed to initialize. Please check your Client ID.')
+        alert('Google Sign-In failed to initialize. Please check your Client ID.')
     }
   }
 
