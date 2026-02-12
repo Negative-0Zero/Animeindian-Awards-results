@@ -68,9 +68,6 @@ export default function Home() {
     setLoading(false)
   }
 
-  const showTimeline = () => {
-    alert(`🗓️ Voting Timeline – ${SEASON.name}:\n\n• Nominations: ${SEASON.timelineNominations}\n• Voting: ${SEASON.timelineVoting}\n• Winners Announced: ${SEASON.timelineWinners}`)
-  }
 
   const TicketIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
@@ -121,13 +118,10 @@ export default function Home() {
               <Trophy size={20} className="text-yellow-600" />
               VOTE NOW
             </Link>
-            <button 
-              onClick={showTimeline}
-              className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 backdrop-blur-md text-white font-bold text-lg rounded-full hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-            >
+            <Link href="/rules" className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 backdrop-blur-md text-white font-bold text-lg rounded-full hover:bg-white/10 hover:scale-105 transition-all flex items-center justify-center gap-2">
               <Calendar size={20} />
-              Timeline
-            </button>
+              Rules & Info
+            </Link>
           </div>
         </div>
       </div>
