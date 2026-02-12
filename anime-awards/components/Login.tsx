@@ -87,7 +87,7 @@ export default function Login({
         client_id: clientId,
         scope: 'openid profile',
         ux_mode: 'popup',
-        redirect_uri: `${window.location.origin}/auth/google/callback`,
+        redirect_uri: `https://animeindian-awards.vercel.app/auth/google/callback`,
         callback: (response) => {
           if (response.error) {
             console.error('Google OAuth error:', response.error)
