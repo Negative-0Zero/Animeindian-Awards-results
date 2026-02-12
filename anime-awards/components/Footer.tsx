@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { FaDiscord, FaRedditAlien, FaGithub } from 'react-icons/fa'
-import { HiOutlineShieldCheck } from 'react-icons/hi'
 
 export default function Footer() {
   return (
@@ -13,6 +12,10 @@ export default function Footer() {
           
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
+            {/* Otaku Bhaskar Presents badge */}
+            <div className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-pink-500/20 border border-orange-500/30 text-xs font-medium text-orange-300 mb-3">
+              Otaku Bhaskar presents
+            </div>
             <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent mb-3">
               r/AnimeIndian Awards
             </h3>
@@ -39,10 +42,7 @@ export default function Footer() {
               >
                 <FaRedditAlien size={20} />
               </a>
-            
-              <span className="text-xs text-gray-500 flex items-center gap-1 ml-2">
-                <span className="animate-pulse">💜</span> Made with love by Otaku Bhaskar Team
-              </span>
+              
             </div>
           </div>
 
@@ -73,21 +73,26 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Integrity Badge */}
-          <div className="flex flex-col items-start md:items-end">
-            <div className="flex items-center gap-2 text-xs bg-white/5 px-4 py-3 rounded-2xl border border-white/10">
-              <HiOutlineShieldCheck className="text-green-400 text-xl" />
-              <div>
-                <p className="text-white font-medium">Verified Voting</p>
-                <p className="text-gray-400">60% Public · 40% Jury</p>
-              </div>
-            </div>
-            <p className="text-xs text-gray-600 mt-4">
+          {/* Copyright & Credit */}
+          <div className="flex flex-col items-start md:items-end justify-end">
+            <p className="text-xs text-gray-500">
               © 2026 r/AnimeIndian. All rights reserved.
+            </p>
+            {/* 💜 Made with love – now below copyright */}
+            <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
+              <span>💜 Made with love by</span>
+              <a 
+                href="https://www.reddit.com/r/animeindian/s/RGJidGAzub" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-pink-400 hover:text-pink-300 transition-colors"
+              >
+                Otaku Bhaskar Team
+              </a>
             </p>
           </div>
         </div>
       </div>
     </footer>
   )
-}
+            }
