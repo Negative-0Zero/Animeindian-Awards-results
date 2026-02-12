@@ -85,9 +85,10 @@ export default function Login({
     try {
       const client = window.google?.accounts.oauth2.initCodeClient({
         client_id: clientId,
-        scope: 'openid profile',
+        scope: 'openid profile', // ✅ NO EMAIL – MAXIMUM PRIVACY
         ux_mode: 'popup',
-        redirect_uri: `https://animeindian-awards.vercel.app/auth/google/callback`,
+        // 🔒 HARDCODED PRODUCTION URL – PREVENTS REDIRECT_MISMATCH
+        redirect_uri: 'https://animeindian-awards.vercel.app/auth/google/callback',
         callback: (response) => {
           if (response.error) {
             console.error('Google OAuth error:', response.error)
@@ -187,4 +188,4 @@ export default function Login({
       )}
     </div>
   )
-    }
+      }
