@@ -6,6 +6,27 @@ import { FaDiscord, FaGoogle } from 'react-icons/fa'
 import { HiOutlineShieldCheck } from 'react-icons/hi'
 import { User } from '@supabase/supabase-js'
 
+// ✅ Google Identity Services type declaration
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        oauth2: {
+          initCodeClient: (config: {
+            client_id: string
+            scope: string
+            ux_mode: string
+            redirect_uri: string
+            callback: (response: { code?: string; error?: string }) => void
+          }) => {
+            requestCode: () => void
+          }
+        }
+      }
+    }
+  }
+}
+
 interface LoginProps {
   compact?: boolean
   showReassurance?: boolean
@@ -18,6 +39,7 @@ export default function Login({
   hideWhenLoggedOut = false
 }: LoginProps) {
   const [user, setUser] = useState<User | null>(null)
+  const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(false) // ✅ FIX – missing state
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -28,48 +50,60 @@ export default function Login({
       setUser(session?.user || null)
     })
 
+    // ✅ Load Google Identity Services script
+    if (!document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+      const script = document.createElement('script')
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.onload = () => setIsGoogleScriptLoaded(true)
+      document.head.appendChild(script)
+    } else {
+      setIsGoogleScriptLoaded(true)
+    }
+
     return () => listener?.subscription.unsubscribe()
   }, [])
 
+  // ✅ DISCORD LOGIN – email unavoidable (Supabase hardcodes)
+  async function signInDiscord() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: { redirectTo: window.location.origin }
+    })
+  }
+
+  // ✅ GOOGLE LOGIN – AUTHORIZATION CODE FLOW, NO EMAIL, DEDICATED CALLBACK
   async function signInGoogle() {
     if (!isGoogleScriptLoaded) {
       alert('Google Sign-In is still loading. Please try again.')
-        return
+      return
     }
 
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-      if (!clientId) {
-        alert('Google Client ID is not configured.')
-          return
-      }
+    if (!clientId) {
+      alert('Google Client ID is not configured.')
+      return
+    }
 
     try {
       const client = window.google?.accounts.oauth2.initCodeClient({
         client_id: clientId,
         scope: 'openid profile', // ✅ NO EMAIL – MAXIMUM PRIVACY
         ux_mode: 'popup',
-        redirect_uri: `${window.location.origin}/auth/google/callback`, // ✅ Your new callback
+        redirect_uri: `${window.location.origin}/auth/google/callback`,
         callback: (response) => {
-        // The code will be sent to the redirect URI – this callback only handles errors
           if (response.error) {
             console.error('Google OAuth error:', response.error)
-              alert('Google login was cancelled or failed.')
+            alert('Google login was cancelled or failed.')
           }
         },
       })
-        client.requestCode()
+      client.requestCode()
     } catch (error) {
       console.error('Failed to initialize Google Sign-In:', error)
-        alert('Google Sign-In failed to initialize.')
+      alert('Google Sign-In failed to initialize. Check your Client ID.')
     }
-  }
-
-  // ✅ DISCORD LOGIN – EMAIL UNAVOIDABLE (SUPABASE HARDCODES IT)
-  async function signInDiscord() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: { redirectTo: window.location.origin }
-    })
   }
 
   async function signOut() {
@@ -150,9 +184,9 @@ export default function Login({
       {showReassurance && (
         <div className="flex items-center gap-2 text-xs text-gray-300 bg-black/30 px-4 py-2 rounded-full backdrop-blur-sm">
           <HiOutlineShieldCheck className="text-green-400 text-base" />
-          <span>🔐 We can't see your email, only your profile is requested for authentication purposes and to prevent duplicate votes.</span>
+          <span>🔐 Your email is only used for authentication and to prevent duplicate votes.</span>
         </div>
       )}
     </div>
   )
-}
+              }
