@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 1. Exchange Google code for tokens
+    // 1. Exchange Google code for ID token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -25,14 +25,13 @@ export async function GET(request: Request) {
       }),
     })
 
-    const { id_token, error: googleError } = await tokenResponse.json()
-
-    if (googleError || !id_token) {
-      console.error('❌ Google token exchange error:', googleError)
+    const { id_token, error } = await tokenResponse.json()
+    if (error || !id_token) {
+      console.error('❌ Google token exchange error:', error)
       return NextResponse.redirect(`${origin}?error=auth_failed`)
     }
 
-    // 2. Create Supabase server client with proper cookie handling
+    // 2. Create Supabase server client – LATEST RECOMMENDED PATTERN
     const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,7 +45,9 @@ export async function GET(request: Request) {
             try {
               cookieStore.set({ name, value, ...options })
             } catch (error) {
-              // Ignore – called from Server Component
+              // The `set` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
             }
           },
           remove(name: string, options: any) {
@@ -78,4 +79,4 @@ export async function GET(request: Request) {
     console.error('❌ Callback error:', err)
     return NextResponse.redirect(`${origin}?error=unknown`)
   }
-}
+                               }
