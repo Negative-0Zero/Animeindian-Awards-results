@@ -3,13 +3,12 @@
 import React from 'react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Footer from '@/components/Footer'
 import { supabase } from '@/utils/supabase/client'
 import Login from '@/components/Login'
+import Footer from '@/components/Footer'
 import { 
   Trophy, Calendar, Star, Flame, Heart, Zap, 
   Clapperboard, Mic, Tv, ArrowRight,
-  // ✨ NEW ICONS ✨
   Sword, Crown, Award, Medal, Sparkles, Camera, Film,
   Music, Radio, Gamepad, Brain, Cloud, Sun, Moon,
   Smile, ThumbsUp, Flag, Gift, Globe, Leaf, Diamond
@@ -46,7 +45,6 @@ export default function Home() {
   async function fetchData() {
     setLoading(true)
     
-    // Fetch categories
     const { data: categoriesData } = await supabase
       .from('categories')
       .select('*')
@@ -54,7 +52,6 @@ export default function Home() {
     
     setCategories(categoriesData || [])
     
-    // Fetch nominees
     const { data: nomineesData } = await supabase
       .from('nominees')
       .select('*')
@@ -75,7 +72,6 @@ export default function Home() {
     alert(`🗓️ Voting Timeline – ${SEASON.name}:\n\n• Nominations: ${SEASON.timelineNominations}\n• Voting: ${SEASON.timelineVoting}\n• Winners Announced: ${SEASON.timelineWinners}`)
   }
 
-  // Custom icon for Ticket (keep it here)
   const TicketIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
       <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
@@ -114,7 +110,7 @@ export default function Home() {
             The biggest community event is back. Celebrating the best
             <span className="text-white font-bold"> Hindi Dubs</span>,
             <span className="text-white font-bold"> Theatrical Releases</span>, and
-            <span className="text-white font-bold"> {SEASON.animeOf}</span>.
+            <span className="text-white font-bold">{SEASON.animeOf}</span>.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -162,7 +158,8 @@ export default function Home() {
       <section id="categories-section" className="max-w-7xl mx-auto px-4 py-12">
         <div className="bg-gradient-to-br from-slate-900/90 to-slate-950/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 flex items-center justify-center gap-3 text-center">
-            The Categories – {SEASON.name}
+            <Star className="text-yellow-400 fill-yellow-400" />
+            <span>The Categories – {SEASON.name}</span>
           </h2>
 
           {loading ? (
@@ -206,4 +203,4 @@ export default function Home() {
       <Footer />
     </main>
   )
-        }
+}
