@@ -3,6 +3,7 @@
 import React from 'react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Footer from '@/components/Footer'
 import { supabase } from '@/utils/supabase/client'
 import Login from '@/components/Login'
 import { 
@@ -202,6 +203,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      <Footer />
     </main>
   )
         }
