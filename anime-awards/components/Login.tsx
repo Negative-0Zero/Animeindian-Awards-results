@@ -108,7 +108,7 @@ export default function Login({
       {showReassurance && (
         <div className="flex items-center gap-2 text-xs text-gray-300 bg-black/30 px-4 py-2 rounded-full backdrop-blur-sm">
           <HiOutlineShieldCheck className="text-green-400 text-base" />
-          <span>🔐 Privacy first. Your data is erased instantly after authentication.</span>
+          <span> Privacy first. Your data is erased instantly after authentication.</span>
         </div>
       )}
     </div>
