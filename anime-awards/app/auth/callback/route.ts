@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 1. Exchange Google code for ID token
+    // Exchange Google code for ID token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -32,30 +32,26 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}?error=auth_failed`)
     }
 
-    // 2. Create Supabase server client (can set cookies)
+    // Create Supabase server client
     const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
+          getAll() { return cookieStore.getAll() },
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               )
-            } catch (err) {
-              // Ignore – called from Server Component
-            }
+            } catch { /* ignore */ }
           },
         },
       }
     )
 
-    // 3. Sign in with ID token
+    // Sign in with ID token
     const { error: supabaseError } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: id_token,
@@ -66,7 +62,6 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}?error=login_failed`)
     }
 
-    // 4. Success – redirect to home
     return NextResponse.redirect(origin)
   } catch (err) {
     console.error('Callback error:', err)
