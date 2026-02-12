@@ -6,7 +6,8 @@ export default function Footer() {
     <footer className="relative mt-20 border-t border-white/10 bg-gradient-to-b from-slate-950/95 to-slate-900/95 backdrop-blur-sm">
       <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-pulse"></div>
       
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        {/* Main row: Brand + Copyright */}
         <div className="flex flex-col md:flex-row md:justify-between items-center md:items-start gap-6">
           
           {/* Brand + Social */}
@@ -17,10 +18,7 @@ export default function Footer() {
             <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent mb-2">
               r/AnimeIndian Awards
             </h3>
-            <p className="text-gray-400 text-sm max-w-md mb-3">
-              One person, one vote. Celebrating the best of Indian anime fandom.
-            </p>
-            <div className="flex items-center justify-center md:justify-start gap-3">
+            <div className="flex items-center justify-center md:justify-start gap-3 mt-2">
               <a href="https://discord.com/invite/jZ85M2GgXS" target="_blank" rel="noopener noreferrer" className="p-2 bg-[#5865F2]/10 hover:bg-[#5865F2] text-[#5865F2] hover:text-white rounded-lg transition-all">
                 <FaDiscord size={20} />
               </a>
@@ -42,6 +40,27 @@ export default function Footer() {
               </a>
             </p>
           </div>
+        </div>
+
+        {/* Bottom Navigation Row */}
+        <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          <ul className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-500">
+            <li>
+              <Link href="/" className="hover:text-white transition-colors">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link href="/rules" className="hover:text-white transition-colors">
+                Rules & Info
+              </Link>
+            </li>
+            <li>
+              <a href="https://reddit.com/r/animeindian" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                Subreddit
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
     </footer>
