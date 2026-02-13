@@ -21,6 +21,7 @@ export default function AdminPage() {
     image_url: ''
   })
   const [categories, setCategories] = useState<any[]>([])
+  const [editingNomineeId, setEditingNomineeId] = useState<string | null>(null)
 
   // ----- Categories State -----
   const [categoryList, setCategoryList] = useState<any[]>([])
@@ -47,13 +48,7 @@ export default function AdminPage() {
     'Smile', 'ThumbsUp', 'Flag', 'Gift', 'Globe', 'Leaf', 'Diamond'
   ]
 
-  useEffect(() => {
-    checkUser()
-    fetchNominees()
-    fetchCategories()
-    fetchRulesContent()
-  }, [])
-
+  // ─── AUTH CHECK + REACTIVE LISTENER ──────────────────────────
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser()
     setUser(user)
@@ -68,6 +63,33 @@ export default function AdminPage() {
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+    // Initial check
+    checkUser()
+
+    // Listen for auth changes (login/logout on the same page)
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        // Re‑check user and admin status
+        checkUser()
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setIsAdmin(false)
+        setLoading(false)
+      }
+    })
+
+    return () => listener?.subscription.unsubscribe()
+  }, [])
+
+  // ─── DATA FETCHING ──────────────────────────────────────────
+  useEffect(() => {
+    if (!user || !isAdmin) return
+    fetchNominees()
+    fetchCategories()
+    fetchRulesContent()
+  }, [user, isAdmin])
 
   async function fetchNominees() {
     const { data } = await supabase
@@ -116,7 +138,7 @@ export default function AdminPage() {
     setSavingContent(false)
   }
 
-  // ----- Nominee Handlers -----
+  // ─── NOMINEE HANDLERS ──────────────────────────────────────
   async function addNominee(e: React.FormEvent) {
     e.preventDefault()
     if (!nomineeForm.title) return alert('Title is required')
@@ -188,7 +210,7 @@ export default function AdminPage() {
     if (!error) fetchNominees()
   }
 
-  // ----- Category Handlers -----
+  // ─── CATEGORY HANDLERS ─────────────────────────────────────
   async function addCategory(e: React.FormEvent) {
     e.preventDefault()
     if (!categoryForm.name || !categoryForm.slug) return alert('Name and slug are required')
@@ -251,8 +273,7 @@ export default function AdminPage() {
     })
   }
 
-  const [editingNomineeId, setEditingNomineeId] = useState<string | null>(null)
-
+  // ─── RENDER ────────────────────────────────────────────────
   if (loading) {
     return <div className="min-h-screen bg-slate-950 text-white p-8">Loading...</div>
   }
@@ -459,7 +480,13 @@ export default function AdminPage() {
                   <input
                     type="text"
                     value={categoryForm.name}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') })}
+                    onChange={(e) => {
+                      setCategoryForm({
+                        ...categoryForm,
+                        name: e.target.value,
+                        slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
+                      })
+                    }}
                     placeholder="e.g. Best New Animation"
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-2 text-white"
                     required
@@ -602,5 +629,4 @@ export default function AdminPage() {
       </div>
     </div>
   )
-    }
-
+  }
