@@ -8,6 +8,26 @@ import VoteButton from '@/components/VoteButton'
 import { ArrowLeft } from 'lucide-react'
 
 export default function CategoryClient({ slug }: { slug: string }) {
+  // ✅ CRITICAL: If slug is missing, show error immediately
+  if (!slug) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-red-400">Error: No category specified in URL.</p>
+          <button
+            onClick={() => router.back()}
+            className="mt-4 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full transition"
+          >
+            ← Go Back
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  // ... rest of your component (useState, useEffect, etc.)
+}
+export default function CategoryClient({ slug }: { slug: string }) {
   const router = useRouter()
   const [category, setCategory] = useState<string>('')
   const [nominees, setNominees] = useState<any[]>([])
