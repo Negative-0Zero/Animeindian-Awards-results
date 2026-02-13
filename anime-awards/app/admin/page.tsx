@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
