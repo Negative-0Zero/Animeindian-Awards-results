@@ -165,13 +165,6 @@ export default function ResultsPage() {
               <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
                 <Trophy className="text-yellow-400" />
                 {category}
-                {/* Debug toggle button */}
-                <button
-                  onClick={() => toggleExpand(category)}
-                  className="ml-auto text-xs bg-white/10 px-3 py-1 rounded-full"
-                >
-                  Debug Toggle
-                </button>
               </h2>
 
               {!isRevealed ? (
@@ -239,9 +232,13 @@ export default function ResultsPage() {
                             <span>Final Score</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Toggle button outside the card */}
+                      <div className="text-center mt-4">
                         <button
                           onClick={() => toggleExpand(category)}
-                          className="mt-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition"
+                          className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition"
                         >
                           {isExpanded ? 'Hide Nominees' : 'Show All Nominees'}
                         </button>
@@ -347,4 +344,4 @@ export default function ResultsPage() {
       )}
     </main>
   )
-        }
+    }
