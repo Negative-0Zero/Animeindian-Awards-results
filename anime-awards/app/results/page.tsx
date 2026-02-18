@@ -10,7 +10,7 @@ export default function ResultsPage() {
   const [nomineesByCategory, setNomineesByCategory] = useState<Record<string, any[]>>({})
   const [resultsByCategory, setResultsByCategory] = useState<Record<string, any[]>>({})
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
-  const [showAll, setShowAll] = useState<Record<string, boolean>>({})
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [selectedNominee, setSelectedNominee] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +26,6 @@ export default function ResultsPage() {
     setError(null)
 
     try {
-      // Fetch all nominees
       const { data: nomineesData, error: nomError } = await supabase
         .from('nominees')
         .select('*')
@@ -34,7 +33,6 @@ export default function ResultsPage() {
 
       if (nomError) throw new Error(nomError.message)
 
-      // Fetch results (top 3 per category) with nominee details
       const { data: resultsData, error: resError } = await supabase
         .from('results')
         .select('*, nominees(title, anime_name, image_url)')
@@ -43,7 +41,6 @@ export default function ResultsPage() {
 
       if (resError) throw new Error(resError.message)
 
-      // Group nominees by category
       const nomineesMap: Record<string, any[]> = {}
       const catSet = new Set<string>()
       nomineesData?.forEach(n => {
@@ -52,7 +49,6 @@ export default function ResultsPage() {
         catSet.add(n.category)
       })
 
-      // Group results by category
       const resultsMap: Record<string, any[]> = {}
       resultsData?.forEach(r => {
         if (!resultsMap[r.category]) resultsMap[r.category] = []
@@ -79,13 +75,12 @@ export default function ResultsPage() {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })
   }
 
-  const toggleShowAll = (category: string) => {
-    console.log(`Toggling showAll for ${category}, current: ${showAll[category]}`);
-    setShowAll(prev => ({ ...prev, [category]: !prev[category] }));
+  const toggleExpand = (category: string) => {
+    console.log(`Toggling expand for ${category}, current: ${expanded[category]}`);
+    setExpanded(prev => ({ ...prev, [category]: !prev[category] }));
   }
 
   const handleNomineeClick = (nominee: any, category: string) => {
-    // Only allow clicking if winner is revealed
     if (!revealed[category]) {
       alert('Results not revealed yet! Click "REVEAL WINNER" first.');
       return;
@@ -157,9 +152,9 @@ export default function ResultsPage() {
         {categories.map(category => {
           const nominees = nomineesByCategory[category] || []
           const results = resultsByCategory[category] || []
-          const winner = results[0] // rank 1
+          const winner = results[0]
           const isRevealed = revealed[category]
-          const isShowingAll = showAll[category]
+          const isExpanded = expanded[category] || false
 
           return (
             <section
@@ -170,9 +165,15 @@ export default function ResultsPage() {
               <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
                 <Trophy className="text-yellow-400" />
                 {category}
+                {/* Debug toggle button */}
+                <button
+                  onClick={() => toggleExpand(category)}
+                  className="ml-auto text-xs bg-white/10 px-3 py-1 rounded-full"
+                >
+                  Debug Toggle
+                </button>
               </h2>
 
-              {/* Simple conditional rendering – no AnimatePresence */}
               {!isRevealed ? (
                 <div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -206,7 +207,6 @@ export default function ResultsPage() {
                 <div>
                   {winner ? (
                     <>
-                      {/* Winner Card */}
                       <div className="bg-gradient-to-br from-yellow-900 via-purple-900 to-pink-900 rounded-3xl p-8 md:p-12 text-center border-4 border-yellow-400 shadow-2xl relative overflow-hidden">
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-300/20 via-transparent to-transparent" />
                         <p className="text-sm uppercase tracking-widest text-yellow-300 mb-2">
@@ -240,15 +240,19 @@ export default function ResultsPage() {
                           </div>
                         </div>
                         <button
-                          onClick={() => toggleShowAll(category)}
+                          onClick={() => toggleExpand(category)}
                           className="mt-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition"
                         >
-                          {isShowingAll ? 'Hide Nominees' : 'Show All Nominees'}
+                          {isExpanded ? 'Hide Nominees' : 'Show All Nominees'}
                         </button>
                       </div>
 
-                      {/* Nominees list – appears when isShowingAll is true */}
-                      {isShowingAll && (
+                      {/* Debug: show current expand state */}
+                      <div className="text-xs text-gray-500 mt-2 text-center">
+                        Debug: expanded = {isExpanded ? 'true' : 'false'}
+                      </div>
+
+                      {isExpanded && (
                         <div className="mt-6">
                           <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -343,4 +347,4 @@ export default function ResultsPage() {
       )}
     </main>
   )
-                    }
+        }
