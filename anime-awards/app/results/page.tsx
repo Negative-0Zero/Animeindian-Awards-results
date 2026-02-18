@@ -9,7 +9,7 @@ import { Trophy, X } from 'lucide-react'
 export default function ResultsPage() {
   const [categories, setCategories] = useState<string[]>([])
   const [nomineesByCategory, setNomineesByCategory] = useState<Record<string, any[]>>({})
-  const [topThreeByCategory, setTopThreeByCategory] = useState<Record<string, any[]>>({})
+  const [resultsByCategory, setResultsByCategory] = useState<Record<string, any[]>>({})
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [showAll, setShowAll] = useState<Record<string, boolean>>({})
   const [selectedNominee, setSelectedNominee] = useState<any>(null)
@@ -35,7 +35,7 @@ export default function ResultsPage() {
 
       if (nomError) throw new Error(nomError.message)
 
-      // Fetch results (top 3 per category)
+      // Fetch results (top 3 per category) with nominee details
       const { data: resultsData, error: resError } = await supabase
         .from('results')
         .select('*, nominees(title, anime_name, image_url)')
@@ -63,7 +63,7 @@ export default function ResultsPage() {
 
       setCategories(Array.from(catSet).sort())
       setNomineesByCategory(nomineesMap)
-      setTopThreeByCategory(resultsMap)
+      setResultsByCategory(resultsMap)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -85,8 +85,7 @@ export default function ResultsPage() {
   }
 
   const handleNomineeClick = (nominee: any, category: string) => {
-    // Find its result (if any)
-    const result = topThreeByCategory[category]?.find(r => r.nominee_id === nominee.id)
+    const result = resultsByCategory[category]?.find(r => r.nominee_id === nominee.id)
     setSelectedNominee({ ...nominee, result })
   }
 
@@ -152,8 +151,8 @@ export default function ResultsPage() {
       <div className="max-w-6xl mx-auto p-6 space-y-16">
         {categories.map(category => {
           const nominees = nomineesByCategory[category] || []
-          const topThree = topThreeByCategory[category] || []
-          const winner = topThree[0] // rank 1
+          const results = resultsByCategory[category] || []
+          const winner = results[0] // rank 1
           const isRevealed = revealed[category]
           const isShowingAll = showAll[category]
 
@@ -170,7 +169,7 @@ export default function ResultsPage() {
 
               <AnimatePresence mode="wait">
                 {!isRevealed ? (
-                  // Nominees grid + Reveal button
+                  // Initial nominee grid – no ranks shown
                   <motion.div
                     key="nominees"
                     initial={{ opacity: 0 }}
@@ -179,30 +178,22 @@ export default function ResultsPage() {
                     transition={{ duration: 0.4 }}
                   >
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      {nominees.map(nominee => {
-                        const rank = topThree.find(r => r.nominee_id === nominee.id)?.rank
-                        return (
-                          <div
-                            key={nominee.id}
-                            onClick={() => handleNomineeClick(nominee, category)}
-                            className="bg-slate-800/50 rounded-xl p-4 text-center border border-white/10 hover:border-yellow-500/30 transition cursor-pointer"
-                          >
-                            {nominee.image_url && (
-                              <img
-                                src={nominee.image_url}
-                                alt={nominee.title}
-                                className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
-                              />
-                            )}
-                            <h3 className="font-bold text-sm md:text-base">{nominee.title}</h3>
-                            {rank && (
-                              <span className="inline-block mt-2 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
-                                Rank #{rank}
-                              </span>
-                            )}
-                          </div>
-                        )
-                      })}
+                      {nominees.map(nominee => (
+                        <div
+                          key={nominee.id}
+                          onClick={() => handleNomineeClick(nominee, category)}
+                          className="bg-slate-800/50 rounded-xl p-4 text-center border border-white/10 hover:border-yellow-500/30 transition cursor-pointer"
+                        >
+                          {nominee.image_url && (
+                            <img
+                              src={nominee.image_url}
+                              alt={nominee.title}
+                              className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
+                            />
+                          )}
+                          <h3 className="font-bold text-sm md:text-base">{nominee.title}</h3>
+                        </div>
+                      ))}
                     </div>
                     <div className="text-center">
                       <button
@@ -224,7 +215,7 @@ export default function ResultsPage() {
                   >
                     {winner ? (
                       <>
-                        <div className="bg-gradient-to-br from-yellow-900 via-purple-900 to-pink-900 rounded-3xl p-8 md:p-12 text-center border-4 border-yellow-400 shadow-2xl relative overflow-hidden mb-6">
+                        <div className="bg-gradient-to-br from-yellow-900 via-purple-900 to-pink-900 rounded-3xl p-8 md:p-12 text-center border-4 border-yellow-400 shadow-2xl relative overflow-hidden">
                           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-300/20 via-transparent to-transparent" />
                           <p className="text-sm uppercase tracking-widest text-yellow-300 mb-2">
                             GRAND WINNER
@@ -264,7 +255,7 @@ export default function ResultsPage() {
                           </button>
                         </div>
 
-                        {/* Full nominee list (collapsible) */}
+                        {/* Full nominee list (collapsible) with ranks */}
                         <AnimatePresence>
                           {isShowingAll && (
                             <motion.div
@@ -272,12 +263,12 @@ export default function ResultsPage() {
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.3 }}
-                              className="overflow-hidden"
+                              className="overflow-hidden mt-6"
                             >
                               <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {nominees.map(nominee => {
-                                  const result = topThree.find(r => r.nominee_id === nominee.id)
+                                  const result = results.find(r => r.nominee_id === nominee.id)
                                   return (
                                     <div
                                       key={nominee.id}
@@ -380,4 +371,4 @@ export default function ResultsPage() {
       </AnimatePresence>
     </main>
   )
-        }
+          }
