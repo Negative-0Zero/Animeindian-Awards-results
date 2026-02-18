@@ -77,9 +77,14 @@ export default function ResultsPage() {
   }
 
   const toggleShowAll = (category: string) => {
-    // Debug alert – remove later
-    alert(`Toggling showAll for ${category}. Current value: ${showAll[category] ? 'true' : 'false'}`)
+    alert(`Toggling showAll for ${category}. Current: ${showAll[category] ? 'true' : 'false'}`)
     setShowAll(prev => ({ ...prev, [category]: !prev[category] }))
+  }
+
+  // Manual test button – forces showAll to true
+  const forceShowAll = (category: string) => {
+    alert(`Forcing showAll = true for ${category}`)
+    setShowAll(prev => ({ ...prev, [category]: true }))
   }
 
   const handleNomineeClick = (nominee: any, category: string) => {
@@ -246,15 +251,25 @@ export default function ResultsPage() {
                               <span>Final Score</span>
                             </div>
                           </div>
-                          <button
-                            onClick={() => toggleShowAll(category)}
-                            className="mt-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition"
-                          >
-                            {isShowingAll ? 'Hide Nominees' : 'Show All Nominees'}
-                          </button>
+
+                          {/* Two buttons: normal toggle and manual force */}
+                          <div className="flex justify-center gap-4 mt-4">
+                            <button
+                              onClick={() => toggleShowAll(category)}
+                              className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition"
+                            >
+                              {isShowingAll ? 'Hide Nominees' : 'Show All Nominees'}
+                            </button>
+                            <button
+                              onClick={() => forceShowAll(category)}
+                              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-medium transition"
+                            >
+                              Force Show
+                            </button>
+                          </div>
                         </div>
 
-                        {/* Simple conditional rendering – no AnimatePresence */}
+                        {/* Nominees list – shown when isShowingAll is true */}
                         {isShowingAll && (
                           <div className="mt-6">
                             <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
@@ -362,4 +377,4 @@ export default function ResultsPage() {
       </AnimatePresence>
     </main>
   )
-        }
+            }
