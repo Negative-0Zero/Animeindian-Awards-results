@@ -27,7 +27,6 @@ export default function ResultsPage() {
     setError(null)
 
     try {
-      // Fetch all nominees
       const { data: nomineesData, error: nomError } = await supabase
         .from('nominees')
         .select('*')
@@ -35,7 +34,6 @@ export default function ResultsPage() {
 
       if (nomError) throw new Error(nomError.message)
 
-      // Fetch results (top 3 per category) with nominee details
       const { data: resultsData, error: resError } = await supabase
         .from('results')
         .select('*, nominees(title, anime_name, image_url)')
@@ -44,7 +42,6 @@ export default function ResultsPage() {
 
       if (resError) throw new Error(resError.message)
 
-      // Group nominees by category
       const nomineesMap: Record<string, any[]> = {}
       const catSet = new Set<string>()
       nomineesData?.forEach(n => {
@@ -53,7 +50,6 @@ export default function ResultsPage() {
         catSet.add(n.category)
       })
 
-      // Group results by category
       const resultsMap: Record<string, any[]> = {}
       resultsData?.forEach(r => {
         if (!resultsMap[r.category]) resultsMap[r.category] = []
@@ -81,6 +77,8 @@ export default function ResultsPage() {
   }
 
   const toggleShowAll = (category: string) => {
+    // Debug alert – remove later
+    alert(`Toggling showAll for ${category}. Current value: ${showAll[category] ? 'true' : 'false'}`)
     setShowAll(prev => ({ ...prev, [category]: !prev[category] }))
   }
 
@@ -128,7 +126,7 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {/* Sticky header with category navigation */}
+      {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-slate-950/95 backdrop-blur-sm border-b border-white/10 p-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">
@@ -152,7 +150,7 @@ export default function ResultsPage() {
         {categories.map(category => {
           const nominees = nomineesByCategory[category] || []
           const results = resultsByCategory[category] || []
-          const winner = results[0] // rank 1
+          const winner = results[0]
           const isRevealed = revealed[category]
           const isShowingAll = showAll[category]
 
@@ -167,9 +165,11 @@ export default function ResultsPage() {
                 {category}
               </h2>
 
+              {/* Debug: show current showAll state */}
+              <div className="text-xs text-gray-500 mb-2">Debug: showAll = {isShowingAll ? 'true' : 'false'}</div>
+
               <AnimatePresence mode="wait">
                 {!isRevealed ? (
-                  // Initial nominee grid – no ranks shown
                   <motion.div
                     key="nominees"
                     initial={{ opacity: 0 }}
@@ -205,7 +205,6 @@ export default function ResultsPage() {
                     </div>
                   </motion.div>
                 ) : (
-                  // Winner card + Show All toggle
                   <motion.div
                     key="winner"
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -255,7 +254,7 @@ export default function ResultsPage() {
                           </button>
                         </div>
 
-                        {/* Full nominee list with ranks – no AnimatePresence to ensure toggling works */}
+                        {/* Simple conditional rendering – no AnimatePresence */}
                         {isShowingAll && (
                           <div className="mt-6">
                             <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
@@ -301,7 +300,7 @@ export default function ResultsPage() {
         })}
       </div>
 
-      {/* Modal for nominee details */}
+      {/* Modal */}
       <AnimatePresence>
         {selectedNominee && (
           <motion.div
@@ -363,4 +362,4 @@ export default function ResultsPage() {
       </AnimatePresence>
     </main>
   )
-            }
+        }
