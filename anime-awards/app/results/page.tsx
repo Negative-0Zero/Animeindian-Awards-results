@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { supabase } from '@/utils/supabase/client'
 import { Trophy, X } from 'lucide-react'
@@ -27,6 +26,7 @@ export default function ResultsPage() {
     setError(null)
 
     try {
+      // Fetch all nominees
       const { data: nomineesData, error: nomError } = await supabase
         .from('nominees')
         .select('*')
@@ -34,6 +34,7 @@ export default function ResultsPage() {
 
       if (nomError) throw new Error(nomError.message)
 
+      // Fetch results (top 3 per category) with nominee details
       const { data: resultsData, error: resError } = await supabase
         .from('results')
         .select('*, nominees(title, anime_name, image_url)')
@@ -42,6 +43,7 @@ export default function ResultsPage() {
 
       if (resError) throw new Error(resError.message)
 
+      // Group nominees by category
       const nomineesMap: Record<string, any[]> = {}
       const catSet = new Set<string>()
       nomineesData?.forEach(n => {
@@ -50,6 +52,7 @@ export default function ResultsPage() {
         catSet.add(n.category)
       })
 
+      // Group results by category
       const resultsMap: Record<string, any[]> = {}
       resultsData?.forEach(r => {
         if (!resultsMap[r.category]) resultsMap[r.category] = []
@@ -77,17 +80,16 @@ export default function ResultsPage() {
   }
 
   const toggleShowAll = (category: string) => {
-    alert(`Toggling showAll for ${category}. Current: ${showAll[category] ? 'true' : 'false'}`)
-    setShowAll(prev => ({ ...prev, [category]: !prev[category] }))
-  }
-
-  // Manual test button – forces showAll to true
-  const forceShowAll = (category: string) => {
-    alert(`Forcing showAll = true for ${category}`)
-    setShowAll(prev => ({ ...prev, [category]: true }))
+    console.log(`Toggling showAll for ${category}, current: ${showAll[category]}`);
+    setShowAll(prev => ({ ...prev, [category]: !prev[category] }));
   }
 
   const handleNomineeClick = (nominee: any, category: string) => {
+    // Only allow clicking if winner is revealed
+    if (!revealed[category]) {
+      alert('Results not revealed yet! Click "REVEAL WINNER" first.');
+      return;
+    }
     const result = resultsByCategory[category]?.find(r => r.nominee_id === nominee.id)
     setSelectedNominee({ ...nominee, result })
   }
@@ -131,7 +133,7 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {/* Sticky header */}
+      {/* Sticky header with category navigation */}
       <div className="sticky top-0 z-20 bg-slate-950/95 backdrop-blur-sm border-b border-white/10 p-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">
@@ -155,7 +157,7 @@ export default function ResultsPage() {
         {categories.map(category => {
           const nominees = nomineesByCategory[category] || []
           const results = resultsByCategory[category] || []
-          const winner = results[0]
+          const winner = results[0] // rank 1
           const isRevealed = revealed[category]
           const isShowingAll = showAll[category]
 
@@ -170,211 +172,175 @@ export default function ResultsPage() {
                 {category}
               </h2>
 
-              {/* Debug: show current showAll state */}
-              <div className="text-xs text-gray-500 mb-2">Debug: showAll = {isShowingAll ? 'true' : 'false'}</div>
-
-              <AnimatePresence mode="wait">
-                {!isRevealed ? (
-                  <motion.div
-                    key="nominees"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      {nominees.map(nominee => (
-                        <div
-                          key={nominee.id}
-                          onClick={() => handleNomineeClick(nominee, category)}
-                          className="bg-slate-800/50 rounded-xl p-4 text-center border border-white/10 hover:border-yellow-500/30 transition cursor-pointer"
-                        >
-                          {nominee.image_url && (
-                            <img
-                              src={nominee.image_url}
-                              alt={nominee.title}
-                              className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
-                            />
-                          )}
-                          <h3 className="font-bold text-sm md:text-base">{nominee.title}</h3>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-center">
-                      <button
-                        onClick={() => handleReveal(category)}
-                        className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black text-lg rounded-full hover:scale-105 transition-all shadow-2xl"
+              {/* Simple conditional rendering – no AnimatePresence */}
+              {!isRevealed ? (
+                <div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {nominees.map(nominee => (
+                      <div
+                        key={nominee.id}
+                        onClick={() => handleNomineeClick(nominee, category)}
+                        className="bg-slate-800/50 rounded-xl p-4 text-center border border-white/10 hover:border-yellow-500/30 transition cursor-pointer"
                       >
-                        ✨ REVEAL WINNER ✨
-                      </button>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="winner"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.5, type: 'spring' }}
-                  >
-                    {winner ? (
-                      <>
-                        <div className="bg-gradient-to-br from-yellow-900 via-purple-900 to-pink-900 rounded-3xl p-8 md:p-12 text-center border-4 border-yellow-400 shadow-2xl relative overflow-hidden">
-                          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-300/20 via-transparent to-transparent" />
-                          <p className="text-sm uppercase tracking-widest text-yellow-300 mb-2">
-                            GRAND WINNER
-                          </p>
-                          <h2 className="text-5xl md:text-7xl font-black mb-4 bg-gradient-to-r from-yellow-200 to-white bg-clip-text text-transparent">
-                            {winner.nominees?.title}
-                          </h2>
-                          {winner.nominees?.anime_name && (
-                            <p className="text-xl text-white/80 mb-6">{winner.nominees.anime_name}</p>
-                          )}
-                          {winner.nominees?.image_url && (
-                            <img
-                              src={winner.nominees.image_url}
-                              alt={winner.nominees.title}
-                              className="w-40 h-40 object-cover rounded-full mx-auto mb-6 border-4 border-yellow-400 shadow-xl"
-                            />
-                          )}
-                          <div className="flex justify-center gap-8 text-white/90 text-sm mb-8">
-                            <div>
-                              <span className="block text-2xl font-bold">{winner.public_votes}</span>
-                              <span>Public Votes</span>
-                            </div>
-                            <div>
-                              <span className="block text-2xl font-bold">{winner.jury_votes}</span>
-                              <span>Jury Votes</span>
-                            </div>
-                            <div>
-                              <span className="block text-2xl font-bold">{winner.final_score?.toFixed(1)}</span>
-                              <span>Final Score</span>
-                            </div>
+                        {nominee.image_url && (
+                          <img
+                            src={nominee.image_url}
+                            alt={nominee.title}
+                            className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
+                          />
+                        )}
+                        <h3 className="font-bold text-sm md:text-base">{nominee.title}</h3>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center">
+                    <button
+                      onClick={() => handleReveal(category)}
+                      className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black text-lg rounded-full hover:scale-105 transition-all shadow-2xl"
+                    >
+                      ✨ REVEAL WINNER ✨
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {winner ? (
+                    <>
+                      {/* Winner Card */}
+                      <div className="bg-gradient-to-br from-yellow-900 via-purple-900 to-pink-900 rounded-3xl p-8 md:p-12 text-center border-4 border-yellow-400 shadow-2xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-300/20 via-transparent to-transparent" />
+                        <p className="text-sm uppercase tracking-widest text-yellow-300 mb-2">
+                          GRAND WINNER
+                        </p>
+                        <h2 className="text-5xl md:text-7xl font-black mb-4 bg-gradient-to-r from-yellow-200 to-white bg-clip-text text-transparent">
+                          {winner.nominees?.title}
+                        </h2>
+                        {winner.nominees?.anime_name && (
+                          <p className="text-xl text-white/80 mb-6">{winner.nominees.anime_name}</p>
+                        )}
+                        {winner.nominees?.image_url && (
+                          <img
+                            src={winner.nominees.image_url}
+                            alt={winner.nominees.title}
+                            className="w-40 h-40 object-cover rounded-full mx-auto mb-6 border-4 border-yellow-400 shadow-xl"
+                          />
+                        )}
+                        <div className="flex justify-center gap-8 text-white/90 text-sm mb-8">
+                          <div>
+                            <span className="block text-2xl font-bold">{winner.public_votes}</span>
+                            <span>Public Votes</span>
                           </div>
-
-                          {/* Two buttons: normal toggle and manual force */}
-                          <div className="flex justify-center gap-4 mt-4">
-                            <button
-                              onClick={() => toggleShowAll(category)}
-                              className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition"
-                            >
-                              {isShowingAll ? 'Hide Nominees' : 'Show All Nominees'}
-                            </button>
-                            <button
-                              onClick={() => forceShowAll(category)}
-                              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-medium transition"
-                            >
-                              Force Show
-                            </button>
+                          <div>
+                            <span className="block text-2xl font-bold">{winner.jury_votes}</span>
+                            <span>Jury Votes</span>
+                          </div>
+                          <div>
+                            <span className="block text-2xl font-bold">{winner.final_score?.toFixed(1)}</span>
+                            <span>Final Score</span>
                           </div>
                         </div>
+                        <button
+                          onClick={() => toggleShowAll(category)}
+                          className="mt-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition"
+                        >
+                          {isShowingAll ? 'Hide Nominees' : 'Show All Nominees'}
+                        </button>
+                      </div>
 
-                        {/* Nominees list – shown when isShowingAll is true */}
-                        {isShowingAll && (
-                          <div className="mt-6">
-                            <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              {nominees.map(nominee => {
-                                const result = results.find(r => r.nominee_id === nominee.id)
-                                return (
-                                  <div
-                                    key={nominee.id}
-                                    onClick={() => handleNomineeClick(nominee, category)}
-                                    className={`bg-slate-800/50 rounded-xl p-4 text-center border ${
-                                      result ? 'border-yellow-500/50' : 'border-white/10'
-                                    } hover:border-yellow-400 transition cursor-pointer`}
-                                  >
-                                    {nominee.image_url && (
-                                      <img
-                                        src={nominee.image_url}
-                                        alt={nominee.title}
-                                        className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
-                                      />
-                                    )}
-                                    <h4 className="font-bold text-sm md:text-base">{nominee.title}</h4>
-                                    {result && (
-                                      <span className="inline-block mt-2 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
-                                        Rank #{result.rank}
-                                      </span>
-                                    )}
-                                  </div>
-                                )
-                              })}
-                            </div>
+                      {/* Nominees list – appears when isShowingAll is true */}
+                      {isShowingAll && (
+                        <div className="mt-6">
+                          <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {nominees.map(nominee => {
+                              const result = results.find(r => r.nominee_id === nominee.id)
+                              return (
+                                <div
+                                  key={nominee.id}
+                                  onClick={() => handleNomineeClick(nominee, category)}
+                                  className={`bg-slate-800/50 rounded-xl p-4 text-center border ${
+                                    result ? 'border-yellow-500/50' : 'border-white/10'
+                                  } hover:border-yellow-400 transition cursor-pointer`}
+                                >
+                                  {nominee.image_url && (
+                                    <img
+                                      src={nominee.image_url}
+                                      alt={nominee.title}
+                                      className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
+                                    />
+                                  )}
+                                  <h4 className="font-bold text-sm md:text-base">{nominee.title}</h4>
+                                  {result && (
+                                    <span className="inline-block mt-2 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
+                                      Rank #{result.rank}
+                                    </span>
+                                  )}
+                                </div>
+                              )
+                            })}
                           </div>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-gray-400 text-center">No winner data for this category.</p>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-gray-400 text-center">No winner data for this category.</p>
+                  )}
+                </div>
+              )}
             </section>
           )
         })}
       </div>
 
-      {/* Modal */}
-      <AnimatePresence>
-        {selectedNominee && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={closeModal}
+      {/* Modal for nominee details */}
+      {selectedNominee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
+          <div
+            className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-3xl p-8 max-w-md w-full border-2 border-yellow-400 shadow-2xl"
+            onClick={e => e.stopPropagation()}
           >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-3xl p-8 max-w-md w-full border-2 border-yellow-400 shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex justify-end">
-                <button onClick={closeModal} className="text-gray-400 hover:text-white">
-                  <X size={24} />
-                </button>
-              </div>
-              <div className="text-center">
-                {selectedNominee.image_url && (
-                  <img
-                    src={selectedNominee.image_url}
-                    alt={selectedNominee.title}
-                    className="w-32 h-32 object-cover rounded-full mx-auto mb-4 border-4 border-yellow-400"
-                  />
-                )}
-                <h2 className="text-3xl font-bold mb-2">{selectedNominee.title}</h2>
-                {selectedNominee.anime_name && (
-                  <p className="text-gray-400 mb-4">{selectedNominee.anime_name}</p>
-                )}
-                {selectedNominee.result ? (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-300">Rank #{selectedNominee.result.rank}</p>
-                    <div className="flex justify-center gap-4 text-sm">
-                      <div>
-                        <span className="block text-xl font-bold">{selectedNominee.result.public_votes}</span>
-                        <span>Public</span>
-                      </div>
-                      <div>
-                        <span className="block text-xl font-bold">{selectedNominee.result.jury_votes}</span>
-                        <span>Jury</span>
-                      </div>
-                      <div>
-                        <span className="block text-xl font-bold">{selectedNominee.result.final_score?.toFixed(1)}</span>
-                        <span>Score</span>
-                      </div>
+            <div className="flex justify-end">
+              <button onClick={closeModal} className="text-gray-400 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="text-center">
+              {selectedNominee.image_url && (
+                <img
+                  src={selectedNominee.image_url}
+                  alt={selectedNominee.title}
+                  className="w-32 h-32 object-cover rounded-full mx-auto mb-4 border-4 border-yellow-400"
+                />
+              )}
+              <h2 className="text-3xl font-bold mb-2">{selectedNominee.title}</h2>
+              {selectedNominee.anime_name && (
+                <p className="text-gray-400 mb-4">{selectedNominee.anime_name}</p>
+              )}
+              {selectedNominee.result ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-300">Rank #{selectedNominee.result.rank}</p>
+                  <div className="flex justify-center gap-4 text-sm">
+                    <div>
+                      <span className="block text-xl font-bold">{selectedNominee.result.public_votes}</span>
+                      <span>Public</span>
+                    </div>
+                    <div>
+                      <span className="block text-xl font-bold">{selectedNominee.result.jury_votes}</span>
+                      <span>Jury</span>
+                    </div>
+                    <div>
+                      <span className="block text-xl font-bold">{selectedNominee.result.final_score?.toFixed(1)}</span>
+                      <span>Score</span>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-gray-400">No vote data available</p>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                </div>
+              ) : (
+                <p className="text-gray-400">No vote data available</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
-            }
+                    }
