@@ -255,48 +255,40 @@ export default function ResultsPage() {
                           </button>
                         </div>
 
-                        {/* Full nominee list (collapsible) with ranks */}
-                        <AnimatePresence>
-                          {isShowingAll && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.3 }}
-                              className="overflow-hidden mt-6"
-                            >
-                              <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {nominees.map(nominee => {
-                                  const result = results.find(r => r.nominee_id === nominee.id)
-                                  return (
-                                    <div
-                                      key={nominee.id}
-                                      onClick={() => handleNomineeClick(nominee, category)}
-                                      className={`bg-slate-800/50 rounded-xl p-4 text-center border ${
-                                        result ? 'border-yellow-500/50' : 'border-white/10'
-                                      } hover:border-yellow-400 transition cursor-pointer`}
-                                    >
-                                      {nominee.image_url && (
-                                        <img
-                                          src={nominee.image_url}
-                                          alt={nominee.title}
-                                          className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
-                                        />
-                                      )}
-                                      <h4 className="font-bold text-sm md:text-base">{nominee.title}</h4>
-                                      {result && (
-                                        <span className="inline-block mt-2 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
-                                          Rank #{result.rank}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                        {/* Full nominee list with ranks – no AnimatePresence to ensure toggling works */}
+                        {isShowingAll && (
+                          <div className="mt-6">
+                            <h3 className="text-xl font-semibold mb-4 text-gray-300">All Nominees</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              {nominees.map(nominee => {
+                                const result = results.find(r => r.nominee_id === nominee.id)
+                                return (
+                                  <div
+                                    key={nominee.id}
+                                    onClick={() => handleNomineeClick(nominee, category)}
+                                    className={`bg-slate-800/50 rounded-xl p-4 text-center border ${
+                                      result ? 'border-yellow-500/50' : 'border-white/10'
+                                    } hover:border-yellow-400 transition cursor-pointer`}
+                                  >
+                                    {nominee.image_url && (
+                                      <img
+                                        src={nominee.image_url}
+                                        alt={nominee.title}
+                                        className="w-20 h-20 object-cover rounded-full mx-auto mb-3 border-2 border-white/20"
+                                      />
+                                    )}
+                                    <h4 className="font-bold text-sm md:text-base">{nominee.title}</h4>
+                                    {result && (
+                                      <span className="inline-block mt-2 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
+                                        Rank #{result.rank}
+                                      </span>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <p className="text-gray-400 text-center">No winner data for this category.</p>
@@ -371,4 +363,4 @@ export default function ResultsPage() {
       </AnimatePresence>
     </main>
   )
-          }
+            }
